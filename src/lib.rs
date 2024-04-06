@@ -24,17 +24,19 @@ pub fn image_to_emoji(
 }
 
 pub fn pixel_to_emoji(x: u32, y: u32, pixel: Rgba<u8>) -> (u32, u32, char) {
+    if pixel.channels()[3] < 127 {
+        return (x, y, '▪');
+    }
     const EMOJIS: &[(char, Rgba<u8>)] = &[
-        ('🟦', Rgba([0x5d, 0xad, 0xec, 0])),
-        ('🟪', Rgba([0xaa, 0x8e, 0xd6, 0])),
-        ('🟧', Rgba([0xff, 0xac, 0x33, 0])),
-        ('🟫', Rgba([0x7c, 0x53, 0x3e, 0])),
-        ('🟥', Rgba([0xbe, 0x19, 0x31, 0])),
-        ('🟨', Rgba([0xfd, 0xcb, 0x58, 0])),
-        ('🟩', Rgba([0x78, 0xb1, 0x59, 0])),
-        ('⬜', Rgba([0xe6, 0xe7, 0xe8, 0])),
-        ('⬛', Rgba([0x29, 0x2f, 0x33, 0])),
-        ('▪', Rgba([0, 0, 0, 255])),
+        ('🟦', Rgba([0x5d, 0xad, 0xec, 255])),
+        ('🟪', Rgba([0xaa, 0x8e, 0xd6, 255])),
+        ('🟧', Rgba([0xff, 0xac, 0x33, 255])),
+        ('🟫', Rgba([0x7c, 0x53, 0x3e, 255])),
+        ('🟥', Rgba([0xbe, 0x19, 0x31, 255])),
+        ('🟨', Rgba([0xfd, 0xcb, 0x58, 255])),
+        ('🟩', Rgba([0x78, 0xb1, 0x59, 255])),
+        ('⬜', Rgba([0xe6, 0xe7, 0xe8, 255])),
+        ('⬛', Rgba([0x29, 0x2f, 0x33, 255])),
     ];
 
     let best_emoji = EMOJIS
