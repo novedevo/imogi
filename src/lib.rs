@@ -27,6 +27,7 @@ pub fn pixel_to_emoji(x: u32, y: u32, pixel: Rgba<u8>) -> (u32, u32, char) {
     if pixel.channels()[3] < 127 {
         return (x, y, '▪');
     }
+    let hsv_pixel = rgba_to_hsv(pixel);
     const EMOJIS: &[(char, Rgba<u8>)] = &[
         ('🟦', Rgba([0x5d, 0xad, 0xec, 255])),
         ('🟪', Rgba([0xaa, 0x8e, 0xd6, 255])),
@@ -42,14 +43,14 @@ pub fn pixel_to_emoji(x: u32, y: u32, pixel: Rgba<u8>) -> (u32, u32, char) {
     let best_emoji = EMOJIS
         .iter()
         .min_by_key(|(_, rgba)| {
-            rgba.channels()
+            rgba_to_hsv(*rgba)
                 .iter()
-                .zip(pixel.channels())
-                .map(|(&reference, &sample)| {
-                    let r = reference as f64;
-                    let s = sample as f64;
+                .zip(hsv_pixel)
+                .map(|(&reference, sample)| {
+                    let r = reference;
+                    let s = sample;
 
-                    r * r - s * s
+                    (r - s) * (r - s)
                 })
                 .sum::<f64>()
                 .sqrt() as u32
@@ -58,4 +59,33 @@ pub fn pixel_to_emoji(x: u32, y: u32, pixel: Rgba<u8>) -> (u32, u32, char) {
         .0;
 
     (x, y, best_emoji)
+}
+
+fn rgba_to_hsv(input: Rgba<u8>) -> [f64; 3] {
+    let rgb = &input.0[0..3];
+    let [r, g, b] = rgb else { unreachable!() };
+    let (rf, gf, bf) = (*r as f64, *g as f64, *b as f64);
+    let xmax = rgb.iter().max().unwrap();
+    let v = xmax;
+    let vf = *v as f64;
+    let xmin = rgb.iter().min().unwrap();
+    let c = xmax - xmin;
+    let cf = c as f64;
+    // let l = (xmax + xmin) as f64 / 2.0;
+    let h = if c == 0 {
+        0.0
+    } else {
+        60.0 * if v == r {
+            ((gf - bf) / cf) % 6.0
+        } else if v == g {
+            (bf - rf) / cf + 2.0
+        } else if v == b {
+            (rf - gf) / cf + 4.0
+        } else {
+            unreachable!()
+        }
+    };
+
+    let sv = if *v == 0 { 0.0 } else { cf / vf };
+    [h, sv, vf]
 }
